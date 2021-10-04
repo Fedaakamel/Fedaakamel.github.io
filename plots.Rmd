@@ -1,0 +1,261 @@
+---
+title: "Visualization"
+author: "FedaaElderdesawe"
+date: "May 20, 2016"
+output: html_document
+---
+
+
+library(ggplot2)
+
+```{r setup, include=FALSE}
+library(zoo)
+
+subject1_0 <- read.table("C:/Users/fedaaelderdesawe/Desktop/thesis/datamining/dataset_a/labeled/lac_1344_0_s016")
+subject1_1 <- read.table("C:/Users/fedaaelderdesawe/Desktop/thesis/datamining/dataset_a/labeled/lac_1344_1_s016")
+subject1_2 <- read.table("C:/Users/fedaaelderdesawe/Desktop/thesis/datamining/dataset_a/labeled/lac_1344_2_s016")
+subject2_0 <- read.table("C:/Users/fedaaelderdesawe/Desktop//thesis/datamining/dataset_a/labeled/lac_1421_0_s012")
+subject2_1 <- read.table("C:/Users/fedaaelderdesawe/Desktop//thesis/datamining/dataset_a/labeled/lac_1421_1_s012")
+subject2_2 <- read.table("C:/Users/fedaaelderdesawe/Desktop//thesis/datamining/dataset_a/labeled/lac_1421_2_s012")
+
+
+```
+
+```{r cars}
+#first subject
+#plotting the same subject for the three differnt sessions0,1,2 for the x coordinates with time 
+plot(subject1_0$V1,subject1_0$V3,xlab = "time",ylab =" x coordinates")
+plot(subject1_1$V1,subject1_1$V3,xlab = "time",ylab =" x coordinates")
+plot(subject1_2$V1,subject1_2$V3,xlab = "time",ylab =" x coordinates")
+
+#plotting the same subject for the three differnt sessions0,1,2 for the y coordinates with time 
+plot(subject1_0$V1,subject1_0$V4,xlab = "time",ylab =" y coordinates")
+plot(subject1_1$V1,subject1_1$V4,xlab = "time",ylab =" y coordinates")
+plot(subject1_2$V1,subject1_2$V4,xlab = "time",ylab =" y coordinates")
+############################################################################################################
+
+
+```
+
+```{r}
+#second subject 
+
+#plotting the second subject for the three differnt sessions0,1,2 for the x coordinates with time
+plot(subject2_0$V1,subject2_0$V3,xlab = "time",ylab =" x coordinates")
+plot(subject2_1$V1,subject2_1$V3,xlab = "time",ylab =" x coordinates")
+plot(subject2_2$V1,subject2_2$V3,xlab = "time",ylab =" x coordinates")
+
+
+#plotting the same subject for the three differnt sessions0,1,2 for the y coordinates with time 
+plot(subject2_0$V1,subject2_0$V4,xlab = "time",ylab =" y coordinates")
+plot(subject2_1$V1,subject2_1$V4,xlab = "time",ylab =" y coordinates")
+plot(subject2_2$V1,subject2_2$V4,xlab = "time",ylab =" y coordinates")
+
+#################################################################################################
+#1
+subject1_1m=subject1_1[subject1_1[,2]=="M",]
+subject1_1G=subject1_1[subject1_1[,2]=="G",]
+subject1_1MC=subject1_1[subject1_1[,2]=="MC",]
+#####################################################
+#2
+subject1_2m=subject1_2[subject1_2[,2]=="M",]
+subject1_2G=subject1_2[subject1_2[,2]=="G",]
+subject1_2MC=subject1_2[subject1_2[,2]=="MC",]
+
+
+#second subject
+
+#0
+subject2_0m=subject2_0[subject2_0[,2]=="M",]
+subject2_0G=subject2_0[subject2_0[,2]=="G",]
+subject2_0MC=subject2_0[subject2_0[,2]=="MC",]
+
+
+#1
+subject2_1m=subject2_1[subject2_1[,2]=="M",]
+subject2_1G=subject2_1[subject2_1[,2]=="G",]
+subject2_1MC=subject2_1[subject2_1[,2]=="MC",]
+#2
+subject2_2m=subject2_2[subject2_2[,2]=="M",]
+subject2_2G=subject2_2[subject2_2[,2]=="G",]
+subject2_2MC=subject2_2[subject2_2[,2]=="MC",]
+
+
+matplot(subject2_0m$V1,cbind(subject2_0m$V4,subject1_1m$V4,subject2_2m$V4),type="l",col=c(rainbow(4)),lwd=3, xlab ="Time", ylab = "y coordinates for second subject ")
+
+matplot(subject2_0m$V1,cbind(subject2_0m$V3,subject1_1m$V3,subject2_2m$V3),type="l",col=c(rainbow(3)),lwd=3, xlab ="Time", ylab = "x coordinates for second subject ")
+
+
+lengthofcurve1=sqrt(diff(subject1_0$V3)^2+(diff(subject1_0$V4)^2))
+
+lengthofcurve2=sqrt(diff(subject2_0$V3)^2+(diff(subject2_0$V4)^2))
+
+plot(lengthofcurve1)
+
+plot(lengthofcurve2)
+
+matplot(,cbind(lengthofcurve1,lengthofcurve2),type="l",col=c(rainbow(3)),lwd=2, xlab ="Time", ylab = "Distance for both subjects ")
+
+#time
+
+Totaltime1=diff(subject1_0$V1)
+plot(Totaltime1)
+Totaltime2=diff(subject2_0$V1)
+plot(Totaltime2)
+
+averagetime=(Totaltime1+Totaltime2)/2
+xcoordinate1subm=zoo(subject1_1m$V3,order.by = subject1_1m$V1)
+xcoordinate2subm=zoo(subject2_1m$V3,order.by = subject2_1m$V1)
+bothsubjects=list(xcoordinate1subm,xcoordinate2subm)
+
+matplot(cbind(xcoordinate1subm,xcoordinate2subm),type="l",col=c(rainbow(3)),lwd=3, xlab ="Time", ylab = "x coordinates for the two subjects ")
+
+
+#######################################################################################
+
+
+```
+
+
+```{r}
+
+#speed
+
+averagespeed1=lengthofcurve1/Totaltime1
+
+averagespeed2=lengthofcurve2/Totaltime2
+
+plot(averagespeed1)
+plot(averagespeed2)
+
+matplot(cbind(averagespeed1,averagespeed2),type="l",col=c(rainbow(3)),lwd=3, xlab ="Time", ylab = "average speed for the two subjects ")
+
+###########################################################################
+#Acceleration
+
+Acceleration1=averagespeed1/Totaltime1
+
+plot(Acceleration1)
+Acceleration2=averagespeed2/Totaltime2
+
+plot(Acceleration2)
+matplot(cbind(Acceleration1,Acceleration2),type="l",col=c(rainbow(3)),lwd=3, xlab ="Time", ylab = "acceleration for the two subjects ")
+################################################################################
+#filtering first subject
+subject1_0m=subject1_0[subject1_0[,2]=="M",]
+subject1_0G=subject1_0[subject1_0[,2]=="G",]
+subject1_0MC=subject1_0[subject1_0[,2]=="MC",]
+
+matplot( ,cbind(zoo(subject1_0m),zoo(subject1_0G),zoo(subject1_0MC)),type="l",col=c(rainbow(3)),lwd=3, xlab ="Time", ylab = "behaviors of mouse and eye for first subject")
+##############################################
+
+
+matplot( ,cbind(zoo(subject1_0m),zoo(subject1_0G),zoo(subject1_0MC)),type="l",col=c(rainbow(3)),lwd=3, xlab ="Time", ylab = "behaviors of mouse and eye for first subject")
+##############################################
+firstsuballsess=list(subject1_2m ,subject1_1m ,subject1_0m)
+#firstsuballsess=list(zoo(subject1_2m) , zoo(subject1_1m) , zoo(subject1_0m))
+#lapply(firstsuballsess,mean)
+#str(firstsuballsess)
+
+###########################################################################
+```
+
+```
+
+
+```
+#standard deviation 
+s 
+
+```{r}
+#combining the three sessions for each subject 
+firstsuballsess=rbind(subject1_2m ,subject1_1m ,subject1_0m)
+
+firstsuballseess.x=zoo(firstsuballsess$V3 )
+firstsuballseess.y=zoo(firstsuballsess$V4)
+
+matplot(cbind(firstsuballseess.x,firstsuballseess.y),type="l",col=c(rainbow(3)),lwd=3, xlab ="Time", ylab = "behaviors of mouse  for first subject")
+firstsuballsessey=rbind(subject1_2G ,subject1_1G ,subject1_0G)
+firstsuballsessey.x=zoo(firstsuballsessey$V3 )
+firstsuballsessey.y=zoo(firstsuballsessey$V4)
+matplot(cbind(firstsuballsessey.x,firstsuballsessey.y),type="l",col=c(rainbow(3)),lwd=3, xlab ="Time", ylab = "behaviors of eye  for first subject")
+#################################################################################3
+secondsuballsess=rbind(subject2_2m ,subject2_1m ,subject2_0m)
+
+secondsuballsess.x=zoo(secondsuballsess$V3 )
+secondsuballsess.y=zoo(secondsuballsess$V4)
+
+matplot(cbind(secondsuballsess.x,secondsuballsess.y),type="l",col=c(rainbow(3)),lwd=3, xlab ="Time", ylab = "behaviors of mouse  for second subject")
+
+
+matplot(cbind(firstsuballseess.x,secondsuballsess.x),type="l",col=c(rainbow(3)),lwd=3, xlab ="Time", ylab = "behaviors of mouse in x coordinates for both subjects")
+
+
+matplot(cbind(firstsuballseess.x,firstsuballsessey.x),type="l",col=c(rainbow(3)),lwd=3, xlab ="Time", ylab = " x coordinates ", main="Difference between eye and mouse in x coordinates for in first subject")
+
+matplot(cbind(firstsuballseess.y,firstsuballsessey.y),type="l",col=c(rainbow(3)),lwd=3, xlab ="Time", ylab = " y coordinates ", main="Difference between eye and mouse in y coordinates for in first subject")
+
+matplot(cbind(firstsuballseess.y,secondsuballsess.y),type="l",col=c(rainbow(3)),lwd=3, xlab ="Time", ylab = "behaviors of mouse in y coordinates for both subjects")
+
+#Gaze for second subject
+
+secondsuballsesey=rbind(subject2_2G ,subject2_1G ,subject2_0G)
+secondsuballsesey.x=zoo(secondsuballsesey$V3 )
+secondsuballsesey.y=zoo(secondsuballsesey$V4)
+
+
+matplot(cbind(firstsuballsessey.x,secondsuballsesey.x),type="l",col=c(rainbow(3)),lwd=3, xlab ="Time", ylab = " x coordinates ", main="Difference between eye x coordinates for both  subjects")
+matplot(cbind(firstsuballsessey.y,secondsuballsesey.y),type="l",col=c(rainbow(3)),lwd=3, xlab ="Time", ylab = " y coordinates ", main="Difference between eye y coordinates for both  subjects")
+
+matplot(cbind(secondsuballsess.x,secondsuballsesey.x),type="l",col=c(rainbow(3)),lwd=3, xlab ="Time", ylab = " x coordinates ", main="Difference between eye and mouse in x coordinates for in second subject")
+
+matplot(cbind(secondsuballsess.y,secondsuballsesey.y),type="l",col=c(rainbow(3)),lwd=3, xlab ="Time", ylab = " x coordinates ", main="Difference between eye and mouse in y coordinates for in second subject")
+
+matplot(cbind(firstsuballsessey,secondsuballsesey),type="l",col=c(rainbow(3)),lwd=3, xlab ="Time", ylab = "behaviors of mouse  for first subject")
+
+lapply(firstsuballseess.x,mean)
+secondsuballsess=list(subject2_2m ,subject2_1m ,subject2_0m)
+#firstsuballsess=list(zoo(subject1_2m) , zoo(subject1_1m) , zoo(subject1_0m))
+str(firstsuballsess)
+
+m2=mean(unlist(secondsuballsess))
+allsub1=do.call(merge,list(zoo(subject1_0m$V3),zoo(subject1_1m$V3),zoo(subject1_2m$V3)))
+allsub1[which(is.na(allsub1))]<-mean(allsub1, na.rm = TRUE)
+
+allsub2=do.call(merge,list(zoo(subject2_0m$V3),zoo(subject1_2m$V3),zoo(subject2_2m$V3)))
+allsub2[which(is.na(allsub2))]<-mean(allsub2, na.rm = TRUE)
+
+averagemouseboth=(allsub1+allsub2)/2
+ts.plot(as.vector(averagemouseboth),type="l",col=c(rainbow(3)),lwd=3, xlab ="Time", ylab = "behaviors of mouse xcoordinates  for both subjects")
+
+sdsub1.x=sd(firstsuballsess$V3)
+
+sdsub1.y=sd(firstsuballsess$V4)
+
+sdsub1.t=sd(firstsuballsess$V1)
+plot(cbind(firstsuballsess$V3,sdsub1.x),type="l",col=c(rainbow(3)),lwd=3, xlab ="Time", main="behaviors of mouse xcoordinates with standard deviation   for  subjects")
+
+
+```
+
+
+lengthofcurve1=sqrt(diff(subject1_0$V3)^2+(diff(subject1_0$V4)^2))
+```{r}
+
+averagemousesub1=sum(subject1_0m$V1,subject1_1m$V1,subject1_2m$V1)/3
+
+# The below plot shows the difference mouse  behavior in X coordinates  for the same subject in different time session
+
+matplot(subject1_0m$V1,cbind(subject1_0m$V3,subject1_1m$V3,subject1_2m$V3),type="l",col=c("blue","red","green"),ylab = "Mouse x coordinates ",lwd=3,xlab="Time")
+
+
+
+
+# The below plot shows the difference mouse  behavior in y coordinates  for the same subject in different time sessions 
+matplot(cbind(subject1_0m$V4,subject1_1m$V4,subject1_2m$V4),type="l",col=c("blue","red","green"),ylab="Mouse y coordinates ",lwd=3,xlab="Time")
+
+        
+
+
+```
+

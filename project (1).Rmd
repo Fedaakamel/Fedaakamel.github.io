@@ -1,0 +1,268 @@
+---
+# **Rosmman slaes prediction**
+*** 
+## By: *FedaaElderdesawe*
+***
+### "January 14, 2016"
+****
+
+
+#**Abstract**
+*
+The objective of this project is to forecast sales using multiple predictors 
+. "Rossmann operates over 3,000 drug stores in 7 European countries. Currently, Rossmann store managers are tasked with predicting their daily sales for up to six weeks in advance. Store sales are influenced by many factors, including promotions, competition, school and state holidays, seasonality, and locality. With thousands of individual managers predicting sales based on their unique circumstances, the accuracy of results can be quite varied"
+By helping Rossmann create a robust prediction model, you will help store managers stay focused on what's most important to them: their customers and their teams
+Prior building our model, the data has been explored; by Exploring relationships between input variables facilitates two things: identifying whether variables need to be dropped due to high correlation, and feature engineering
+
+The best predicted model to forecast sales for next six weeks is the one which estimate the sales at least residuals error
+******************************************************
+
+##**Data visulaization** 
+
+
+*
+Trying to understand the data by plotting histogram for the sales time series 
+The train data for Rossman store has 1115 for each day during the interval between January 2013 till the end of July from 2015
+1.
+
+```{r}
+train <- read.csv("C:/Users/fedaaelderdesawe/Desktop/train.csv")
+test  <- read.csv("C:/Users/fedaaelderdesawe/Desktop/test.csv")
+stores <- read.csv("C:/Users/fedaaelderdesawe/Desktop/store.csv")
+hist(train$Sales, 50, main = "Mean sales per store" )
+
+
+```
+
+
+##**Data Analysis**
+1. *Firstly* I took the frequency for the sales to be the number of stores which is 1115 and I construct the time series and draw boxplot between the sales and the cycle for the data which as its weekly sales data 
+2.from the boxplot we can the variation in data which indication for seasonality and trend
+
+
+```{r}
+
+sales.ts <- ts(train$Sales,start=c(2013,1),end=c(2015,7),frequency=1115)
+boxplot(sales.ts~cycle(sales.ts))
+
+
+```
+
+*Secondly* *Building the time series* 
+1. Then I aggeraate the sales using the list of dates to make time series accorrding to date not depending on each store 
+2.I assume that the company need to forecast all sales in each store not to forecast the sales for each store 
+```{r, echo=FALSE}
+
+sales.ts <- ts(train$Sales,start=c(2013,1),end=c(2015,7),frequency=1115)
+boxplot(sales.ts~cycle(sales.ts))
+aggregatesales <- aggregate(train$Sales,by=list(train$Date),FUN=sum, na.rm=TRUE)
+agg.ts <- ts(aggregatesales[,2],start=c(2013,1,1),end=c(2015,7,31),frequency=52)
+col = rainbow(3)
+plot.ts(agg.ts,col=col, xlab = "Time per Year",ylab = "Total sales ",pch=19,main="Aggregated sales per year", las=1)
+
+
+
+```
+
+### Decompostion time series 
+I make decompostion for the aggregate  time series to detect the trend and seasonality 
+
+1.From the decomposition we can see number of seasons in each cycle and the trend is not stable some times increase  and other time decrease ccording to seasonlity.
+2.From the Correlogram for sales time series we can see some significant values at repeated periodic   different lags which an indicator for seasonality 
+
+```{r}
+#Decompositions
+decompose.agg <- decompose(agg.ts,type = "mult")
+plot(decompose.agg)
+seasonal <- decompose.agg$seasonal
+trend <- decompose.agg$trend
+random <- decompose.agg$random
+ts.plot(cbind(trend, trend * seasonal), lty = 1:2)
+plot.ts(trend)
+plot.ts(random)
+plot.ts(seasonal)
+acf(agg.ts, xlab = 'lag (weeks)', main="Correlogram for Sales time series")
+
+
+
+```
+
+### Holtwinters method 
+The seasonal variation looks as though it would be better modelled as multiplicative, and comparison of the SS1PE for the fitted models.
+1.APplying holtwinters method to time series to estimate parameters \alpha ,\Gamma and \beta and it estimate  optimum seasons parameters  for 52 weeks 
+2.I predict the sales for the next 52 weeks
+3.Drawing  residuals  Correlogram and from it we can see the correlations between lags this indicator for seasonality so we need to remove the seasonality and trend from it to have better fit 
+```{r}
+#Holtwinters model
+agg.hw <- HoltWinters(agg.ts,  seas = "mult")
+agg.hw ; agg.hw$coef ;agg.hw$SSE
+plot (agg.hw,main="Holt-Winters fit for RoSSMANN sales" )
+
+#Predictions 
+agg.predict <- predict(agg.hw, n.ahead = 1 * 52)
+agg.predict
+ ts.plot(agg.ts, agg.predict,main="Holt-Winters forecast  for RoSSMANN sales in 2016", lty = 1:2)
+ 
+ acf(resid(agg.hw),main="Correlogram for  Sales time series residuals")
+ 
+```
+
+
+### Logarithm sales time series 
+As I assumed that sales have multiplicative seasonality so I will take the log for sales to have better forecasting model 
+
+
+```{r}
+ logagg.ts <- ts(log(aggregatesales[,2]),start=c(2013,1,1),end=c(2015,7,31),frequency=52)
+ logg.hw <- HoltWinters(logagg.ts,  seas = "mult")
+ loggg.predict <- exp(predict( logg.hw, n.ahead = 1 * 52))
+
+```
+
+
+
+##Linear model 
+
+Applying linear model to aggregate sales time series as the data have seasonlity so I will add the seasonlity in the linear model 
+###Results
+1.From linear model figure the  straight line is an adequate description of the trend. A tendency for the series to persist above or below the x-axis implies that the series is positively
+autocorrelated.
+2.from the correlogram which shows a clear positive autocorrelation for the residuls of linear model there is still not good fit and we dont remove the seasonality effects 
+
+```{r}
+Seas <- cycle(agg.ts)
+ Time <-  1:length(agg.ts)
+agg.lm <- lm(agg.ts ~  Time + I(Time^2)+ factor(Seas))
+plot( Time , resid(agg.lm), type = "l")
+abline(0, 0, col = "red")
+summary(agg.lm)
+coef(agg.lm)
+ acf(resid(agg.lm),main="Correlogram for   linear model residuals")
+ pacf(resid(agg.lm))
+ 
+```
+###Generalised linear model
+
+I used Generalised linear model to get real estimate of linear model parameters and standard error
+
+```{r}
+ library(nlme)
+agg.gls <- gls(agg.ts ~ Time , cor = corAR1(0.07))
+ summary(agg.gls)
+  
+
+```
+
+##ARIMA model
+
+Trying to fit best fit for the sales time series using arima model 
+
+###Results
+1.I let R to give me the best order for arima model by assuming that I took the first order of differencing  (4,1,5)
+
+2.I let R to Give me the best AIC criteria which is the minimum one : 3488
+
+3. From the  correlogram we have good fit for residuals as white noise distribution but we still have some significant values as in lag 14 that mean we couldnt remove all seasonality 
+
+4. I use The predict function  to forecast sales for the next 6 weeks  from the fitted regression model and forecast the future errors associated with the regression model using the ARIMA model fitted to the residuals from the regression 
+
+
+```{r}
+
+best.order <- c(0, 1, 0)
+best.aic <- Inf
+for (i in 0:5) for (j in 0:5) {
+  fit.aic <- AIC(arima(resid(agg.lm), order = c(i, 1,j)))
+  if (fit.aic < best.aic) {
+    best.order <- c(i, 1, j)
+    best.arma <- arima(resid(agg.lm), order = best.order)
+    best.aic <- fit.aic
+  }
+}
+best.aic
+best.order
+acf(resid(best.arma))
+#predictions
+new.time <- seq(length(agg.ts), length = 6)
+new.data <- data.frame(Time = new.time, Imth = rep(7:52,6))
+logagg.lm <- lm(log(agg.ts) ~  Time + I(Time^2)+ factor(Seas))
+
+predict.arma <- predict(best.arma, n.ahead = 6)
+predict.arma
+
+```
+
+
+
+####  Build Time series for each store 
+As  we have 1115 stores for the ROSSMANN company so we need to forecast the sales for each store for the next 6 weeks 
+
+
+
+###*ARIMA linear model for the sales for each store sales* 
+
+
+```{r,warning=FALSE}
+
+library(forecast)
+n = max(train$Store)
+
+seasonal.naive = function(train, test) {
+  test$Date = test$Date - 7*52*2
+  #test = subset(train, train$Date %in% dates & train$Store %in% test$Store)
+  test = merge(train, test, by=c("Store", "Date"))
+  test$Date = test$Date + 7*52*2
+  return(test)
+}
+
+median.naive = function(train, test) {
+    n = max(test$Store)
+    for (i in 1:n) { #iterate for stores
+        for (j in 1:7) { #itetato for days
+            test$Sales[test$Store == i & test$DayOfWeek == j] = median(train$Sales[train$Store==i & train$DayOfWeek == j])
+        }
+    }
+    return(test)
+}
+
+tslm.basic <- function(train, test){
+  n = max(test$Store)
+  for(i in 1:n){
+    s <- ts(train$Sales[train$Store==i], frequency=52)
+    model <- tslm(s ~ trend + season)
+    horizon = length(test$DayOfWeek[test$Store == i])
+    fc <- forecast(model, h=horizon)
+    test$Sales[test$Store == i] <- as.numeric(fc$mean)
+  }
+  return(test)
+}
+
+arima.basic = function(train, test) {
+  n = max(test$Store)
+  stores = unique(test$Store)
+  for(i in stores){
+    s <- ts(train$Sales[train$Store==i], frequency=52)
+    model <- auto.arima(s, ic='bic', seasonal = FALSE)
+    horizon = length(test$DayOfWeek[test$Store == i])
+    fc <- forecast(model, h=horizon)
+    test$Sales[test$Store == i] <- as.numeric(fc$mean)
+    cat(i, " ")
+  }
+  return(test)
+}
+
+test_id = test$Id
+
+arima = arima.basic(train, test)
+
+arima$Sales[arima$Open == 0] = 0
+submission <- data.frame(Id=arima$Id, Sales=arima$Sales)
+
+write.csv(submission, "arima.csv",row.names=F)
+```
+
+##**Conclusion** 
+
+The Data is hard to visualize every thing as its too big more than 1 million observations .After constructing  a real time series I found that it  not stationary time series as it contain  seasonlity so we need to make it stationarity .I try to build several model using linear regression or ARIMA model to have good model with least errors 
+
+Time series model alone is not sufficient for capturing all the variability in data because not all Features are not taken into account and  Even after differencing with the suggested d value, data might  still non  stationary.

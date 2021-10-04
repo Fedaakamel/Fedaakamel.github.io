@@ -1,0 +1,242 @@
+---
+title: "Forecast_Faydalancısayı"
+author: "feda"
+date: "31 08 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(forecast)
+library(stratification)
+library(caTools)
+library(tseries)
+require(plyr)
+require(forecast)
+require(reshape)
+library(ggplot2)
+library(fpp2)
+library(ggplot2)
+library(gridExtra)
+library(grid)
+library(ggplot2)
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data visualization
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+
+YTDEFORCAST <- read_excel("C:/Users/fedaa.elderdesawe/Desktop/YTDE/YTDEFORCAST.xlsx")
+YTDEFORCAST=as.data.frame(YTDEFORCAST)
+#######################################################333
+household=ts(YTDEFORCAST [,c(1,3,4)],  start=c(2019, 5), end=c(2020, 8), frequency=12)
+MEBTEN=ts(YTDEFORCAST  [, 3],  start=c(2019, 5), end=c(2020, 8), frequency=12)
+odemealan=ts(YTDEFORCAST  [,4],  start=c(2019, 5), end=c(2020, 8), frequency=12)
+odemealan2=ts(YTDEFORCAST  [,c(1,4)],  start=c(2019, 5), end=c(2020, 8), frequency=12)
+
+autoplot(household,facets = FALSE)
+
+autoplot(MEBTEN,facets = FALSE)
+autoplot(odemealan2,facets = FALSE)
+
+outlier <- which.max(household)
+matplot(,cbind(YTDEFORCAST$`TOPLAM SAYILARI`,YTDEFORCAST$`FAYDALANCI SAYISI`,YTDEFORCAST$A1,YTDEFORCAST$A2,YTDEFORCAST$B1),type="l",col=c(rainbow(3)),lwd=3, xlab ="Time", ylab = "y coordinates")
+
+##############################################################O3
+ggseasonplot(MEBTEN) ###No seasonlaity 
+ggseasonplot(odemealan2[,2], polar = TRUE)
+
+prt <- window(household, start = 2018)
+autoplot(prt)
+#gglagplot(household[,2])
+
+autoplot(diff(household))
+ggAcf(diff(household))
+ggAcf(household[,2])
+
+boxplot(household~cycle(household))
+
+decompose.ytde <- decompose(household,type = "mult")
+plot(decompose.ytde)
+
+
+
+```
+
+## #Holtwinters model
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+
+#Holtwinters model
+agg.hw <- HoltWinters(odemealan2,  seas = "mult")
+agg.hw ; agg.hw$coef ;agg.hw$SSE
+#plot (agg.hw,main="Holt-Winters fit for Uygun Birey Sayısı" )
+#######################♠Holtwinter
+agg.hw <- HoltWinters(household,  seas = "mult")
+agg.hw ; agg.hw$coef ;agg.hw$SSE
+#plot (agg.hw,main="Holt-Winters fit for Uygun Birey Sayısı" )
+
+holt_model <- holt(odemealan, h = 12)
+summary(holt_model)
+write.csv( holt_model$upper,file = paste(" Holtpredict",  ".csv") ,sep = "")
+
+#Predictions 
+agg.predict <- predict(agg.hw, n.ahead = 1 * 12)
+agg.predict
+write.csv( agg.predict,file = paste(" predict",  ".csv") ,sep = "") 
+ts.plot(household, agg.predict,main="Holt-Winters forecast  for uygun birey sayı", lty = 1:2)
+firstholt=data.frame(agg.predict)
+
+```
+
+####LINEAR MODEL
+```{r}
+######################################LINEAR MODEL
+Seas <- cycle(household)
+Time <-  1:length(household)
+agg.lm <- lm(MEBTEN ~  household + odemealan+factor(Seas))
+
+summary(agg.lm)
+coef(agg.lm)
+acf(resid(agg.lm),main="Correlogram for   linear model residuals")
+pacf(resid(agg.lm))
+
+linearpredict=predict( agg.lm, n.ahead = 1 * 12)
+plot (linearpredict,main="linear fit for Başvuru sayı" )
+write.csv( linearpredict,file = paste("linear predict",  ".csv") ,sep = "") 
+Seas <- cycle(household)
+Time <-  1:length(household)
+agg.lm <- lm(MEBTEN ~  household + odemealan+factor(Seas))
+
+summary(agg.lm)
+coef(agg.lm)
+acf(resid(agg.lm),main="Correlogram for   linear model residuals")
+pacf(resid(agg.lm))
+
+linearpredict=predict( agg.lm, n.ahead = 1 * 12)
+plot (linearpredict,main="linear fit for Başvuru sayı" )
+write.csv( linearpredict,file = paste("linear predict",  ".csv") ,sep = "") 
+
+
+```
+
+###DATA partition
+```{r}
+train_rows = sample.split(YTDEFORCAST$`TOPLAM SAYILARI`, SplitRatio=0.7)
+
+test_rows=!train_rows
+
+train =YTDEFORCAST[ train_rows,]
+train_meb=ts(train[,3],  start=c(2019, 5), end=c(2020,7))
+training=window(MEBTEN, start = c(2019,5), end = c(2020,3))
+validation=window(MEBTEN, start = c(2020,4))
+test  = YTDEFORCAST[!train_rows,]
+
+```
+###State Space Models
+```{r}
+#####State Space Models
+mape <- function(actual,pred){
+  mape <- mean(abs((actual - pred)/actual))*100
+  return (mape)
+}
+
+ets_model = ets(training, allow.multiplicative.trend = TRUE)
+summary(ets_model)
+ets_forecast = forecast(ets_model, h=length(validation))
+mape(ets_forecast$mean, validation)*100
+f.ets <- forecast(odemealan,h=12)
+summary(f.ets)
+write.csv( f.ets$upper,file = paste("State Space_mod predict",  ".csv") ,sep = "") 
+```
+
+###NAIVE
+```{r}
+################NAIVE
+naive_mod <- naive(odemealan, h = 12)
+summary(naive_mod)
+naive_mod$upper
+
+write.csv( naive_mod$upper,file = paste("naive_mod predict",  ".csv") ,sep = "") 
+
+######
+fit.ets <- ets(MEBTEN)
+print(fit.ets)
+f.ets <- forecast(fit.ets,h=12)
+#mepe(naive$mean, validation)
+print(f.ets)
+```
+
+```{r}
+###################Simple Exponential Smoothing
+
+se_model <- ses(odemealan, h = 12)
+summary(se_model)
+
+
+######################################################
+
+
+#####################################################################################################
+```
+
+
+```{r}
+######### Double Seasonal Holt-Winters
+dshw_model = dshw(odemealan, period1=2, period2 =4, h=12)
+
+#mape(dshw_model$mean, validation)*100
+summary(dshw_model)
+nn=as.data.frame(summary(dshw_model))
+dshw_model$model
+#nn$num=seq.int(nn$x)
+#nn$x=as.character(nn$x)
+write.csv( nn,file = paste("DoubleSeasonalHolt-Winters predict-odemealn",  ".csv") ,sep = "") 
+```
+
+
+#####,TABTS MODEL
+
+```{r}
+###############################################################,TABTS MODEL
+tbats_model = tbats(training)
+tbats_forecast = forecast(tbats_model, h=length(validation))
+mape(tbats_forecast$mean, validation) * 100
+
+model_tbats <- tbats(odemealan)
+summary(model_tbats)
+
+for_tbats <- forecast::forecast(model_tbats, h = 12)
+df_tbats = as.data.frame(for_tbats)
+#dat_test$tbats = df_tbats$`Point Forecast`
+#mape(dat_test$unemploy, dat_test$tbats) 
+write.csv( df_tbats ,file = paste("TABTSApredict",  ".csv") ,sep = "")
+
+```
+####ARIMA MODEL
+```{r}
+#############ARIMA MODEL
+arima_optimal = auto.arima(training)
+arima_model <- auto.arima(odemealan)
+arima_model <- auto.arima(odemealan)
+summary(arima_model)
+
+fore_arima = forecast::forecast(arima_model, h=12)
+df_arima = as.data.frame(fore_arima)
+#dat_test$arima = df_arima$`Point Forecast`
+write.csv( df_arima ,file = paste("ARIMApredictforodemealan",  ".csv") ,sep = "")
+
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
