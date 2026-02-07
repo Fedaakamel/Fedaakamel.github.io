@@ -119,7 +119,24 @@ In `index.html`, find line 180-200 and update:
 </a>
 ```
 
-#### 4. Add Your Social Links
+#### 4. Update Statistics (Years of Experience, Projects, Clients)
+
+In `index.html`, find the statistics section around line 50-62:
+```html
+<div class="stat-item">
+    <div class="stat-number" data-target="5">0</div>
+    <div class="stat-label">Years of<br>Experience</div>
+</div>
+```
+
+**Change the `data-target` values to your numbers:**
+- `data-target="5"` → Years of experience
+- `data-target="15"` → Number of projects completed  
+- `data-target="12"` → Number of happy clients
+
+The numbers will animate from 0 to your target value when the page loads!
+
+#### 5. Add Your Social Links
 
 Update GitHub and LinkedIn links around line 191-204.
 
@@ -133,17 +150,30 @@ Each project is in a `<article class="project-card">` section. Update:
 
 ### Change Colors
 
-In `styles.css`, find the `:root` section (line 7-16):
+In `styles.css`, find the `:root` section (line 7-19):
 
 ```css
 :root {
-    --color-primary: #1a1a1a;      /* Main dark color */
-    --color-accent: #d4a574;        /* Gold/bronze accent */
-    --color-background: #ffffff;    /* Background color */
+    /* Professional Dark Theme */
+    --color-primary: #0a0e27;          /* Deep navy blue */
+    --color-secondary: #1a1f3a;        /* Dark blue-gray */
+    --color-accent: #6366f1;           /* Modern indigo */
+    --color-background: #0f172a;       /* Very dark blue */
 }
 ```
 
-Change these hex codes to your preferred colors.
+**Current Color Scheme:**
+- **Background**: Deep navy/dark blue (#0f172a)
+- **Accent Color**: Modern indigo/purple (#6366f1)
+- **Text**: Light gray (#e2e8f0)
+- **Cards**: Dark blue-gray (#1e293b)
+
+Change these hex codes to your preferred colors. Popular professional alternatives:
+- **Tech Blue**: `--color-accent: #3b82f6` (Bright blue)
+- **Emerald Green**: `--color-accent: #10b981` (Modern green)
+- **Orange**: `--color-accent: #f59e0b` (Warm orange)
+- **Pink**: `--color-accent: #ec4899` (Modern pink)
+- **Teal**: `--color-accent: #14b8a6` (Professional teal)
 
 ### Change Fonts
 
